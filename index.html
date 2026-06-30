@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Net Worth — Tracker</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#04130d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Net Worth">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#eef3fb;
+    --paper:#0a1020;
+    --paper2:#101a33;
+    --card:#121d3a;
+    --line:#22304f;
+    --teal:#0a1020;
+    --teal-light:#1a274488;
+    --accent:#4da3ff;
+    --accent-soft:#8fc4ff;
+    --gold:#4da3ff;
+    --gold-soft:#8fc4ff;
+    --rust:#7fd4ff;
+    --good:#4da3ff;
+    --bad:#ff7a7a;
+    --shadow: 0 4px 18px rgba(0,0,0,0.45);
+    --radius:18px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family: "Iowan Old Style","Georgia","Times New Roman",serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:90px;
+  }
+  .mono{ font-family: "SFMono-Regular","Menlo","Consolas",monospace; letter-spacing:0.01em; }
+
+  header.top{
+    position:sticky; top:0; z-index:20;
+    background:var(--teal);
+    color:var(--ink);
+    padding:18px 18px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  header.top .topbar{
+    display:flex; align-items:center; justify-content:center; gap:8px; position:relative;
+  }
+  header.top .logo-mark{
+    width:30px;height:30px;border-radius:8px;
+    background:linear-gradient(160deg,#16264a,#0d1530);
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);
+  }
+  header.top .topbar-spacer{ width:30px; }
+  header.top .eyebrow{
+    font-family:"SFMono-Regular",Menlo,Consolas,monospace;
+    font-size:11px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:#7d93bd;
+    text-align:center;
+    margin:8px 0 0;
+  }
+  header.top h1{
+    margin:0;
+    font-size:1.15rem;
+    font-weight:600;
+    letter-spacing:0.01em;
+    text-align:center;
+  }
+
+  .wrap{ max-width:640px; margin:0 auto; padding:18px 16px 0; }
+
+  /* TABS */
+  nav.tabs{
+    display:flex;
+    gap:6px;
+    margin:16px 0 18px;
+    background:var(--paper2);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:4px;
+  }
+  nav.tabs button{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding:10px 6px;
+    font-family:inherit;
+    font-size:0.78rem;
+    font-weight:600;
+    letter-spacing:0.02em;
+    color:var(--teal);
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  nav.tabs button.active{
+    background:var(--ink);
+    color:var(--paper);
+  }
+  nav.tabs button:not(.active){ color:var(--ink); opacity:0.65; }
+
+  .panel{ display:none; animation: fade .25s ease; }
+  .panel.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .card h2{
+    margin:0 0 12px;
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    color:var(--accent-soft);
+    font-family:"SFMono-Regular",Menlo,Consolas,monospace;
+    font-weight:600;
+  }
+
+  /* row entries */
+  .row-entry{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:8px;
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .row-entry:last-of-type{ border-bottom:none; }
+  .row-entry .row-head{
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .row-entry .row-head input.name{
+    border:none; background:transparent;
+    font-family:inherit; font-weight:600; font-size:1rem;
+    color:var(--ink); padding:2px 0; width:70%;
+    border-bottom:1px dashed transparent;
+  }
+  .row-entry .row-head input.name:focus{ outline:none; border-bottom:1px dashed var(--accent); }
+  .row-entry .del{
+    background:none; border:none; color:var(--bad); font-size:1.1rem;
+    cursor:pointer; padding:2px 8px; line-height:1;
+  }
+  .fields{ display:grid; grid-template-columns: repeat(3,1fr); gap:8px; }
+  .fields.two{ grid-template-columns: repeat(2,1fr); }
+  .field label{
+    display:block; font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em;
+    color:#7d93bd; margin-bottom:3px; font-family:"SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  .field input{
+    width:100%; padding:8px 9px; border:1px solid var(--line); border-radius:8px;
+    font-family:"SFMono-Regular",Menlo,Consolas,monospace; font-size:0.92rem;
+    background:var(--paper2); color:var(--ink);
+  }
+  .field input:focus{ outline:none; border-color:var(--accent); background:#15224a; }
+
+  .add-btn{
+    width:100%; margin-top:6px;
+    padding:11px; border-radius:10px;
+    border:1.5px dashed #27365c;
+    background:transparent; color:var(--accent);
+    font-family:inherit; font-weight:600; font-size:0.85rem;
+    cursor:pointer;
+  }
+  .add-btn:active{ background:var(--paper2); }
+
+  .total-line{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-top:10px; padding-top:12px; border-top:2px solid var(--accent);
+  }
+  .total-line .label{ font-weight:600; color:var(--accent-soft); font-size:0.85rem; }
+  .total-line .val{ font-family:"SFMono-Regular",Menlo,Consolas,monospace; font-size:1.15rem; font-weight:700; color:var(--ink); }
+
+  /* projection top boxes */
+  .stat-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px;}
+  .stat-box{
+    background:var(--card); color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px;
+    position:relative; overflow:hidden;
+  }
+  .stat-box.wide{ grid-column: 1 / -1; }
+  .stat-box .lbl{
+    font-size:0.62rem; text-transform:uppercase; letter-spacing:0.1em;
+    color:var(--accent-soft); font-family:"SFMono-Regular",Menlo,Consolas,monospace;
+    margin-bottom:6px;
+  }
+  .stat-box .big{
+    font-family:"SFMono-Regular",Menlo,Consolas,monospace; font-size:1.3rem; font-weight:700;
+  }
+  .stat-box .big .cents{ font-size:0.8rem; opacity:0.65; }
+  .stat-box input{
+    background:transparent; border:none; color:var(--ink);
+    font-family:"SFMono-Regular",Menlo,Consolas,monospace; font-size:1.3rem; font-weight:700;
+    width:100%; padding:0; border-bottom:1px dashed #27365c;
+  }
+  .stat-box input:focus{ outline:none; border-bottom-color:var(--accent); }
+  .stat-box .sub{ font-size:0.68rem; opacity:0.55; margin-top:4px; }
+
+  .refresh-row{
+    display:flex; justify-content:flex-end; margin-bottom:8px;
+  }
+  .refresh-btn{
+    display:flex; align-items:center; gap:6px;
+    background:var(--accent); color:var(--paper);
+    border:none; border-radius:999px; padding:9px 16px;
+    font-family:inherit; font-weight:700; font-size:0.78rem;
+    cursor:pointer; box-shadow:var(--shadow);
+  }
+  .refresh-btn:active{ transform:scale(0.97); }
+  .refresh-btn svg{ width:14px; height:14px; }
+
+  .chart-card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px 10px 8px; box-shadow:var(--shadow); }
+  .legend-row{ display:flex; gap:16px; font-size:0.72rem; padding:0 6px 10px; color:#7d93bd; }
+  .legend-row span{ display:flex; align-items:center; gap:6px; }
+  .swatch{ width:16px; height:0; border-top:3px solid var(--accent); display:inline-block; }
+  .swatch.dotted{ border-top:3px dotted var(--bad); }
+  .chart-wrap{ position:relative; height:340px; }
+
+  .return-box{
+    position:absolute; top:6px; right:6px; z-index:5;
+    background:var(--paper2); border:1px solid var(--line); border-radius:10px;
+    padding:6px 10px; box-shadow:var(--shadow);
+    display:flex; align-items:center; gap:6px;
+  }
+  .return-box label{ font-size:0.6rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--bad); font-family:"SFMono-Regular",Menlo,Consolas,monospace;}
+  .return-box input{
+    width:48px; border:none; border-bottom:1px solid var(--line);
+    font-family:"SFMono-Regular",Menlo,Consolas,monospace; font-weight:700; font-size:0.85rem;
+    text-align:right; background:transparent; color:var(--ink);
+  }
+  .return-box input:focus{ outline:none; border-bottom-color:var(--accent); }
+
+  .age-axis-note{ text-align:center; font-size:0.7rem; color:#7d93bd; margin-top:6px; }
+
+  .footer-note{
+    text-align:center; font-size:0.7rem; color:#7d93bd; padding:18px 20px 10px; line-height:1.5;
+  }
+
+  .toast{
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--accent); color:var(--paper); padding:10px 18px; border-radius:999px;
+    font-size:0.8rem; font-weight:600; opacity:0; transition:all .25s ease; pointer-events:none;
+    box-shadow:0 4px 14px rgba(0,0,0,0.4); z-index:50;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="topbar">
+    <span class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 20V4l16 16V4" stroke="#4da3ff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+    <h1>Net Worth Tracker</h1>
+    <span class="topbar-spacer"></span>
+  </div>
+  <p class="eyebrow">Local · Private · Always current</p>
+</header>
+
+<div class="wrap">
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="t1">Net Worth &amp; Assumption</button>
+    <button class="tab-btn" data-tab="t2">Expenses in Retirement</button>
+    <button class="tab-btn" data-tab="t3">Projection</button>
+  </nav>
+
+  <!-- TAB 1 -->
+  <section class="panel active" id="t1">
+    <div class="card">
+      <h2>Accounts</h2>
+      <div id="accountsList"></div>
+      <button class="add-btn" id="addAccount">+ Add account</button>
+      <div class="total-line">
+        <span class="label">Net Worth (total value)</span>
+        <span class="val mono" id="totalNetWorth">RM 0</span>
+      </div>
+      <div class="total-line">
+        <span class="label">Effective % Return (weighted, p.a.)</span>
+        <span class="val mono" id="effectiveReturn">0.0%</span>
+      </div>
+    </div>
+    <p class="footer-note">Effective % return is the value‑weighted average growth rate across all accounts — used for the solid projection line. Total value transfers automatically to the Projection tab.</p>
+  </section>
+
+  <!-- TAB 2 -->
+  <section class="panel" id="t2">
+    <div class="card">
+      <h2>Expenses in Retirement</h2>
+      <div id="expensesList"></div>
+      <button class="add-btn" id="addExpense">+ Add expense</button>
+      <div class="total-line">
+        <span class="label">Total Expenses</span>
+        <span class="val mono" id="totalExpenses">RM 0</span>
+      </div>
+    </div>
+    <p class="footer-note">Monthly figures — total carries over to Retirement Expenses p.a. on the Projection tab (×12). You can still override it there.</p>
+  </section>
+
+  <!-- TAB 3 -->
+  <section class="panel" id="t3">
+    <div class="refresh-row">
+      <button class="refresh-btn" id="refreshBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v6h-6"/></svg>
+        Refresh
+      </button>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-box wide">
+        <div class="lbl">Net Worth</div>
+        <div class="big mono" id="nwDisplay">RM 0</div>
+        <div class="sub">from Tab 1</div>
+      </div>
+      <div class="stat-box">
+        <div class="lbl">Current Age</div>
+        <input type="number" id="currentAgeInput" class="mono" value="34">
+      </div>
+      <div class="stat-box">
+        <div class="lbl">Age Retire</div>
+        <input type="number" id="ageRetireInput" class="mono" value="55">
+      </div>
+      <div class="stat-box wide">
+        <div class="lbl">Retirement Expenses (p.a.)</div>
+        <input type="text" id="retireExpInput" class="mono" value="0">
+        <div class="sub">auto-filled from Tab 2 ×12 — edit to override</div>
+      </div>
+      <div class="stat-box wide">
+        <div class="lbl">Fund Sustains Until</div>
+        <div class="big mono" id="sustainDisplay">—</div>
+        <div class="sub" id="sustainSub">based on dotted line, % return and expenses below</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="legend-row">
+        <span><span class="swatch"></span> Projection (Graph A — per Tab 1 assumption)</span>
+        <span><span class="swatch dotted"></span> Post‑retirement (net of expenses)</span>
+      </div>
+      <div class="chart-wrap">
+        <div class="return-box">
+          <label>% RETURN</label>
+          <input type="number" id="dottedReturnInput" class="mono" value="4" step="0.1">
+        </div>
+        <canvas id="nwChart"></canvas>
+      </div>
+      <p class="age-axis-note">Age 34 → 100 · hover the chart to read amounts · contributions cease at age 60</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast">Saved</div>
+
+<script>
+/* ---------------- STORAGE ---------------- */
+const STORE_KEY = "nwt_state_v1";
+
+function defaultState(){
+  return {
+    birthYear: 1992,
+    currentAgeOverride: null, // null = derive from birthYear; set when user edits Current Age on Tab 3
+    accounts: [
+      { name:"Account 1", value:0, contribution:0, rate:0 }
+    ],
+    expenses: [
+      { name:"Expense 1", amount:0 }
+    ],
+    ageRetire: 55,
+    retireExpOverride: null, // null = auto from tab2*12
+    dottedReturn: 4
+  };
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    // wipe historical: we only ever keep this single object, last write wins
+    return Object.assign(defaultState(), parsed);
+  }catch(e){
+    return defaultState();
+  }
+}
+
+let state = loadState();
+
+function saveState(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  showToast();
+}
+
+let toastTimer;
+function showToast(){
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 900);
+}
+
+/* ---------------- HELPERS ---------------- */
+function fmtRM(n, opts={}){
+  if(isNaN(n)) n = 0;
+  const neg = n < 0;
+  n = Math.abs(n);
+  const whole = Math.floor(n);
+  const cents = Math.round((n - whole) * 100);
+  const wholeStr = whole.toLocaleString('en-US');
+  const prefix = opts.bare ? '' : 'RM ';
+  const sign = neg ? '-' : '';
+  if(opts.html){
+    return `${sign}${prefix}${wholeStr}<span class="cents">.${String(cents).padStart(2,'0')}</span>`;
+  }
+  return `${sign}${prefix}${wholeStr}.${String(cents).padStart(2,'0')}`;
+}
+function num(v){
+  const n = parseFloat(String(v).replace(/[^0-9.\-]/g,''));
+  return isNaN(n) ? 0 : n;
+}
+function currentAge(){
+  if(state.currentAgeOverride !== null && state.currentAgeOverride !== undefined && !isNaN(state.currentAgeOverride)){
+    return state.currentAgeOverride;
+  }
+  const now = new Date();
+  return now.getFullYear() - state.birthYear;
+}
+
+/* ---------------- TABS ---------------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 't3'){ renderProjectionInputs(); drawChart(); }
+  });
+});
+
+/* ---------------- TAB 1: ACCOUNTS ---------------- */
+const accountsList = document.getElementById('accountsList');
+
+function renderAccounts(){
+  accountsList.innerHTML = '';
+  state.accounts.forEach((acc, i)=>{
+    const row = document.createElement('div');
+    row.className = 'row-entry';
+    row.innerHTML = `
+      <div class="row-head">
+        <input class="name" data-idx="${i}" data-f="name" value="${escapeAttr(acc.name)}">
+        <button class="del" data-idx="${i}">✕</button>
+      </div>
+      <div class="fields">
+        <div class="field">
+          <label>Value (RM)</label>
+          <input type="number" data-idx="${i}" data-f="value" value="${acc.value}">
+        </div>
+        <div class="field">
+          <label>Contrib. (RM/mo)</label>
+          <input type="number" data-idx="${i}" data-f="contribution" value="${acc.contribution}">
+        </div>
+        <div class="field">
+          <label>Growth %/yr</label>
+          <input type="number" data-idx="${i}" data-f="rate" value="${acc.rate}" step="0.1">
+        </div>
+      </div>
+    `;
+    accountsList.appendChild(row);
+  });
+
+  accountsList.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const i = +e.target.dataset.idx, f = e.target.dataset.f;
+      state.accounts[i][f] = (f==='name') ? e.target.value : num(e.target.value);
+      saveState();
+      updateTotals();
+    });
+  });
+  accountsList.querySelectorAll('.del').forEach(b=>{
+    b.addEventListener('click', e=>{
+      const i = +e.target.dataset.idx;
+      state.accounts.splice(i,1);
+      if(state.accounts.length===0) state.accounts.push({name:"Account 1", value:0, contribution:0, rate:0});
+      saveState();
+      renderAccounts();
+      updateTotals();
+    });
+  });
+}
+
+document.getElementById('addAccount').addEventListener('click', ()=>{
+  state.accounts.push({ name:`Account ${state.accounts.length+1}`, value:0, contribution:0, rate:0 });
+  saveState();
+  renderAccounts();
+  updateTotals();
+});
+
+function updateTotals(){
+  const totalValue = state.accounts.reduce((s,a)=>s+num(a.value),0);
+  document.getElementById('totalNetWorth').innerHTML = fmtRM(totalValue, {html:true});
+  const weighted = totalValue>0
+    ? state.accounts.reduce((s,a)=> s + num(a.value)*num(a.rate), 0) / totalValue
+    : 0;
+  document.getElementById('effectiveReturn').textContent = weighted.toFixed(1)+'%';
+  // keep tab3 net worth box synced
+  document.getElementById('nwDisplay').innerHTML = fmtRM(totalValue, {html:true});
+}
+
+/* ---------------- TAB 2: EXPENSES ---------------- */
+const expensesList = document.getElementById('expensesList');
+
+function renderExpenses(){
+  expensesList.innerHTML = '';
+  state.expenses.forEach((exp,i)=>{
+    const row = document.createElement('div');
+    row.className = 'row-entry';
+    row.innerHTML = `
+      <div class="row-head">
+        <input class="name" data-idx="${i}" data-f="name" value="${escapeAttr(exp.name)}">
+        <button class="del" data-idx="${i}">✕</button>
+      </div>
+      <div class="fields two">
+        <div class="field">
+          <label>Amount (RM/mo)</label>
+          <input type="number" data-idx="${i}" data-f="amount" value="${exp.amount}">
+        </div>
+      </div>
+    `;
+    expensesList.appendChild(row);
+  });
+  expensesList.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const i = +e.target.dataset.idx, f = e.target.dataset.f;
+      state.expenses[i][f] = (f==='name') ? e.target.value : num(e.target.value);
+      saveState();
+      updateExpenseTotal();
+    });
+  });
+  expensesList.querySelectorAll('.del').forEach(b=>{
+    b.addEventListener('click', e=>{
+      const i = +e.target.dataset.idx;
+      state.expenses.splice(i,1);
+      if(state.expenses.length===0) state.expenses.push({name:"Expense 1", amount:0});
+      saveState();
+      renderExpenses();
+      updateExpenseTotal();
+    });
+  });
+}
+
+document.getElementById('addExpense').addEventListener('click', ()=>{
+  state.expenses.push({ name:`Expense ${state.expenses.length+1}`, amount:0 });
+  saveState();
+  renderExpenses();
+  updateExpenseTotal();
+});
+
+function updateExpenseTotal(){
+  const total = state.expenses.reduce((s,e)=>s+num(e.amount),0);
+  document.getElementById('totalExpenses').textContent = fmtRM(total);
+}
+
+function escapeAttr(s){
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+/* ---------------- TAB 3: PROJECTION ---------------- */
+const currentAgeInput = document.getElementById('currentAgeInput');
+const ageRetireInput = document.getElementById('ageRetireInput');
+const retireExpInput = document.getElementById('retireExpInput');
+const dottedReturnInput = document.getElementById('dottedReturnInput');
+
+function renderProjectionInputs(){
+  currentAgeInput.value = currentAge();
+  ageRetireInput.value = state.ageRetire;
+  const autoExp = state.expenses.reduce((s,e)=>s+num(e.amount),0) * 12;
+  retireExpInput.value = (state.retireExpOverride!==null ? state.retireExpOverride : autoExp).toLocaleString('en-US');
+  dottedReturnInput.value = state.dottedReturn;
+  updateTotals();
+}
+
+currentAgeInput.addEventListener('input', ()=>{
+  const v = num(currentAgeInput.value);
+  state.currentAgeOverride = (currentAgeInput.value === '' || isNaN(v)) ? null : v;
+  saveState();
+});
+ageRetireInput.addEventListener('input', ()=>{
+  state.ageRetire = num(ageRetireInput.value);
+  saveState();
+});
+retireExpInput.addEventListener('input', ()=>{
+  state.retireExpOverride = num(retireExpInput.value);
+  saveState();
+});
+retireExpInput.addEventListener('blur', ()=>{
+  retireExpInput.value = num(retireExpInput.value).toLocaleString('en-US');
+});
+dottedReturnInput.addEventListener('input', ()=>{
+  state.dottedReturn = num(dottedReturnInput.value);
+  saveState();
+});
+
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+  renderProjectionInputs();
+  drawChart();
+  showToast();
+});
+
+let chartInstance = null;
+
+function computeProjection(){
+  const startAge = currentAge();
+  const endAge = 100;
+  const ageRetire = num(ageRetireInput.value) || state.ageRetire;
+  const retireExpPA = num(retireExpInput.value);
+  const dottedRate = num(dottedReturnInput.value)/100;
+
+  const startValue = state.accounts.reduce((s,a)=>s+num(a.value),0);
+
+  // Solid line: per-account compounding, annual, contributions stop at retirement
+  let accBalances = state.accounts.map(a=>num(a.value));
+  const solid = [];
+  let retireSolidValue = null;
+
+  for(let age=startAge; age<=endAge; age++){
+    const total = accBalances.reduce((s,v)=>s+v,0);
+    solid.push({x:age, y:total});
+    if(age === ageRetire) retireSolidValue = total;
+
+    // advance one year for next iteration
+    accBalances = accBalances.map((bal, i)=>{
+      const acc = state.accounts[i];
+      const rate = num(acc.rate)/100;
+      const CONTRIBUTION_STOP_AGE = 60; // contributions always cease at 60, regardless of Age Retire
+      const contributing = age < CONTRIBUTION_STOP_AGE;
+      const annualContribution = contributing ? num(acc.contribution)*12 : 0;
+      return (bal + annualContribution) * (1+rate);
+    });
+  }
+
+  // Dotted line: branches from solid value at ageRetire, applies dottedRate, subtracts retireExpPA annually
+  const dotted = [];
+  let depleteAge = null; // age (possibly fractional) at which fund hits zero
+  if(ageRetire >= startAge && ageRetire <= endAge){
+    let val = retireSolidValue !== null ? retireSolidValue : startValue;
+    for(let age=ageRetire; age<=endAge; age++){
+      dotted.push({x:age, y: Math.max(val,1)});
+      const prevVal = val;
+      val = val*(1+dottedRate) - retireExpPA;
+      if(prevVal > 0 && val <= 0 && depleteAge === null){
+        // linear interpolation within this year for a friendlier estimate
+        const frac = prevVal / (prevVal - val);
+        depleteAge = age + frac;
+      }
+    }
+  }
+
+  return { solid, dotted, startAge, endAge, ageRetire, depleteAge };
+}
+
+function drawChart(){
+  const { solid, dotted, startAge, endAge, ageRetire, depleteAge } = computeProjection();
+  const ctx = document.getElementById('nwChart').getContext('2d');
+
+  // update Fund Sustains Until box
+  const sustainDisplay = document.getElementById('sustainDisplay');
+  const sustainSub = document.getElementById('sustainSub');
+  if(depleteAge === null){
+    sustainDisplay.textContent = 'Past age 100';
+    sustainSub.textContent = `fund still positive at age ${endAge} — doesn't run out in this projection`;
+  } else {
+    const yearsFromRetire = Math.max(depleteAge - ageRetire, 0);
+    sustainDisplay.textContent = `Age ${Math.floor(depleteAge)}`;
+    sustainSub.textContent = `≈ ${yearsFromRetire.toFixed(1)} years after retiring at ${ageRetire}`;
+  }
+
+  if(chartInstance) chartInstance.destroy();
+
+  const gradient = ctx.createLinearGradient(0,0,0,320);
+  gradient.addColorStop(0, 'rgba(77,163,255,0.35)');
+  gradient.addColorStop(1, 'rgba(77,163,255,0.02)');
+
+  chartInstance = new Chart(ctx, {
+    type:'line',
+    data:{
+      datasets:[
+        {
+          label:'Projection',
+          data: solid,
+          borderColor:'#4da3ff',
+          backgroundColor:gradient,
+          borderWidth:2.5,
+          pointRadius:0,
+          tension:0.25,
+          fill:true,
+        },
+        {
+          label:'Post-retirement',
+          data: dotted,
+          borderColor:'#ff7a7a',
+          borderWidth:2.5,
+          borderDash:[6,5],
+          pointRadius:0,
+          tension:0.25,
+          fill:false,
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      layout:{ padding:{ bottom:4 } },
+      interaction:{ mode:'index', intersect:false },
+      scales:{
+        x:{
+          type:'linear',
+          min:startAge, max:endAge,
+          title:{ display:true, text:'AGE', color:'#9fb4dd', font:{family:'monospace', size:11, weight:'700'} },
+          ticks:{
+            color:'#cfdcf5',
+            stepSize:5,
+            font:{family:'monospace', size:11, weight:'600'},
+            padding:6
+          },
+          grid:{ color:'rgba(207,220,245,0.08)', drawTicks:true, tickColor:'#4d6390' },
+          border:{ color:'#4d6390', width:2 }
+        },
+        y:{
+          type:'logarithmic',
+          min:1000,
+          display:false
+        }
+      },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{
+          backgroundColor:'#121d3a',
+          borderColor:'#22304f',
+          borderWidth:1,
+          titleColor:'#eef5f0',
+          bodyColor:'#eef5f0',
+          titleFont:{family:'monospace'},
+          bodyFont:{family:'monospace'},
+          callbacks:{
+            title: (items)=> 'Age ' + items[0].parsed.x,
+            label: (item)=> (item.dataset.label) + ': ' + fmtRM(item.parsed.y)
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ---------------- INIT ---------------- */
+function init(){
+  renderAccounts();
+  renderExpenses();
+  updateTotals();
+  updateExpenseTotal();
+  renderProjectionInputs();
+}
+init();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+</script>
+</body>
+</html>
