@@ -792,6 +792,10 @@ function updateNWSummary(){
 
 document.getElementById('saveHistoryBtn').addEventListener('click',async()=>{
   if(!accounts.length){ toast('Add accounts in Settings first'); return; }
+
+  const btn=document.getElementById('saveHistoryBtn');
+  btn.disabled=true; btn.textContent='Saving…';
+
   const date=document.getElementById('nwDate').value||todayStr();
   const entries=accounts.map(acc=>({
     accountId:acc.id,
@@ -799,15 +803,25 @@ document.getElementById('saveHistoryBtn').addEventListener('click',async()=>{
     mv:num(document.querySelector(`.nw-cell-inp[data-id="${acc.id}"][data-f="mv"]`)?.value||0),
     contribution:num(document.querySelector(`.nw-cell-inp[data-id="${acc.id}"][data-f="monthly"]`)?.value||0)
   }));
-  await Promise.all([
-    fsH().add({date, savedAt:firebase.firestore.FieldValue.serverTimestamp(), entries}),
-    fsAs().set(assumptions)
-  ]);
-  toast('Snapshot saved ✓');
-  const snap=await fsH().orderBy('date','desc').get();
-  history=snap.docs.map(d=>({id:d.id,...d.data()}));
-  renderHistory();
-  renderProjection();
+
+  try{
+    await Promise.all([
+      fsH().add({date, savedAt:firebase.firestore.FieldValue.serverTimestamp(), entries}),
+      fsAs().set(assumptions)
+    ]);
+    toast('Snapshot saved ✓');
+    const snap=await fsH().orderBy('date','desc').get();
+    history=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderHistory();
+    renderProjection();
+  } catch(e){
+    console.error('Save failed:',e);
+    toast('Error: '+( e.code==='permission-denied'
+      ? 'Permission denied — check Firestore rules'
+      : e.message||'Save failed'));
+  } finally{
+    btn.disabled=false; btn.textContent='Save to History';
+  }
 });
 
 /* ════════════════════════════════
