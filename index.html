@@ -31,7 +31,7 @@ body{padding-bottom:var(--nav-h);overflow-x:hidden;}
 /* ── LOGIN ── */
 #loginScreen{
   min-height:100vh;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;padding:32px 24px;gap:28px;
+  align-items:center;justify-content:center;padding:32px 24px;gap:20px;
   background:radial-gradient(ellipse 80% 60% at 50% -10%,#1a3070 0%,#080f1e 70%);
 }
 .login-mark{
@@ -40,16 +40,49 @@ body{padding-bottom:var(--nav-h);overflow-x:hidden;}
   border:1px solid #2a4590;display:flex;align-items:center;justify-content:center;
 }
 .login-title{font-size:1.6rem;font-weight:800;letter-spacing:-.02em;}
-.login-sub{color:var(--muted);font-size:.85rem;text-align:center;line-height:1.65;max-width:270px;}
+.login-sub{color:var(--muted);font-size:.85rem;text-align:center;line-height:1.65;max-width:300px;}
+.login-box{
+  width:100%;max-width:320px;
+  background:var(--card);border:1px solid var(--line);border-radius:20px;
+  padding:24px;display:flex;flex-direction:column;gap:12px;
+}
+.login-box .field{margin:0;}
+.login-box input{
+  width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;
+  background:var(--bg2);color:var(--ink);font-size:.95rem;font-family:inherit;
+}
+.login-box input:focus{outline:none;border-color:var(--accent);}
+.login-box input::placeholder{color:var(--muted);}
+.btn-email{
+  width:100%;padding:13px;border-radius:12px;border:none;
+  background:var(--accent);color:#fff;font-weight:700;font-size:.92rem;
+  cursor:pointer;font-family:inherit;transition:opacity .1s;
+}
+.btn-email:active{opacity:.85;}
+.login-divider{
+  display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.72rem;
+}
+.login-divider::before,.login-divider::after{
+  content:'';flex:1;height:1px;background:var(--line);
+}
 .google-btn{
   display:flex;align-items:center;gap:10px;background:#fff;color:#111;
-  border:none;padding:14px 24px;border-radius:999px;cursor:pointer;
-  font-size:.92rem;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.4);
-  width:100%;max-width:290px;justify-content:center;
-  transition:transform .1s,box-shadow .1s;
+  border:none;padding:13px 20px;border-radius:12px;cursor:pointer;
+  font-size:.9rem;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.4);
+  width:100%;justify-content:center;transition:transform .1s,box-shadow .1s;
 }
-.google-btn:active{transform:scale(.98);box-shadow:0 2px 10px rgba(0,0,0,.3);}
+.google-btn:active{transform:scale(.98);}
 .google-btn svg{width:20px;height:20px;flex-shrink:0;}
+.login-toggle{
+  font-size:.78rem;color:var(--muted);text-align:center;cursor:pointer;
+}
+.login-toggle span{color:var(--accent);font-weight:700;}
+.login-error{
+  font-size:.75rem;color:var(--bad);text-align:center;
+  background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);
+  border-radius:8px;padding:8px 12px;display:none;
+}
+.login-error.show{display:block;}
 
 /* ── HEADER ── */
 header{
@@ -281,11 +314,33 @@ input[type=number]{font-family:monospace;}
     <h1 class="login-title" style="text-align:center">Net Worth Tracker</h1>
     <p style="font-size:.65rem;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);text-align:center;margin-top:4px">Private · Synced · Yours</p>
   </div>
-  <p class="login-sub">Track your accounts, record history, and project your retirement. Synced securely to your Google account.</p>
-  <button class="google-btn" id="googleSignIn">
-    <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.5 33 29.1 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 2.9l5.7-5.7C34.1 6.7 29.3 5 24 5 12.9 5 4 13.9 4 25s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 15l6.6 4.8C14.6 17 19.1 14 24 14c3 0 5.8 1.1 7.9 2.9l5.7-5.7C34 7.7 29.3 6 24 6 16.3 6 9.5 9.6 6.3 15z"/><path fill="#4CAF50" d="M24 44c5.1 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.6 26.9 37 24 37c-5.1 0-9.5-3.3-11.2-8H6.5C9.8 39.4 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.8 2.4-2.4 4.5-4.4 6l6.2 5.2C40 37.2 44 31.8 44 25c0-1.3-.1-2.6-.4-3.9z"/></svg>
-    Continue with Google
-  </button>
+
+  <div class="login-box">
+    <div id="loginError" class="login-error"></div>
+
+    <div class="field">
+      <input type="email" id="loginEmail" placeholder="Email address" autocomplete="email">
+    </div>
+    <div class="field">
+      <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+    </div>
+    <div class="field" id="loginConfirmWrap" style="display:none">
+      <input type="password" id="loginConfirm" placeholder="Confirm password">
+    </div>
+
+    <button class="btn-email" id="emailAuthBtn">Sign In</button>
+
+    <p class="login-toggle" id="authToggle">
+      No account? <span id="authToggleLabel">Create one</span>
+    </p>
+
+    <div class="login-divider">or</div>
+
+    <button class="google-btn" id="googleSignIn">
+      <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.5 33 29.1 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 2.9l5.7-5.7C34.1 6.7 29.3 5 24 5 12.9 5 4 13.9 4 25s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 15l6.6 4.8C14.6 17 19.1 14 24 14c3 0 5.8 1.1 7.9 2.9l5.7-5.7C34 7.7 29.3 6 24 6 16.3 6 9.5 9.6 6.3 15z"/><path fill="#4CAF50" d="M24 44c5.1 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.6 26.9 37 24 37c-5.1 0-9.5-3.3-11.2-8H6.5C9.8 39.4 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.8 2.4-2.4 4.5-4.4 6l6.2 5.2C40 37.2 44 31.8 44 25c0-1.3-.1-2.6-.4-3.9z"/></svg>
+      Continue with Google
+    </button>
+  </div>
 </div>
 
 <!-- ══════════════ APP ══════════════ -->
@@ -533,23 +588,88 @@ async function loadAll(){
 }
 
 /* ══ AUTH ══ */
-document.getElementById('googleSignIn').addEventListener('click',()=>{
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message));
-});
-document.getElementById('signOutBtn').addEventListener('click',()=>auth.signOut());
+/* ══ AUTH ══ */
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+let isSignUp = false;
 
-auth.onAuthStateChanged(user=>{
-  if(user){
-    uid=user.uid;
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('app').style.display='block';
-    const av=document.getElementById('userAvatar');
-    if(user.photoURL){ av.src=user.photoURL; av.style.display='block'; }
+// Toggle sign in / sign up mode
+document.getElementById('authToggle').addEventListener('click', () => {
+  isSignUp = !isSignUp;
+  document.getElementById('emailAuthBtn').textContent = isSignUp ? 'Create Account' : 'Sign In';
+  document.getElementById('authToggleLabel').textContent = isSignUp ? 'Sign in instead' : 'Create one';
+  document.getElementById('loginConfirmWrap').style.display = isSignUp ? 'block' : 'none';
+  showLoginError('');
+});
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.classList.toggle('show', !!msg);
+}
+
+function friendlyError(code) {
+  switch(code) {
+    case 'auth/user-not-found':     return 'No account found with this email.';
+    case 'auth/wrong-password':     return 'Incorrect password.';
+    case 'auth/email-already-in-use': return 'This email is already registered. Sign in instead.';
+    case 'auth/weak-password':      return 'Password must be at least 6 characters.';
+    case 'auth/invalid-email':      return 'Please enter a valid email address.';
+    case 'auth/too-many-requests':  return 'Too many attempts. Please try again later.';
+    case 'auth/invalid-credential': return 'Incorrect email or password.';
+    default: return 'Something went wrong. Please try again.';
+  }
+}
+
+document.getElementById('emailAuthBtn').addEventListener('click', async () => {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const confirm  = document.getElementById('loginConfirm').value;
+  showLoginError('');
+  if (!email || !password) { showLoginError('Please enter your email and password.'); return; }
+  if (isSignUp && password !== confirm) { showLoginError('Passwords do not match.'); return; }
+  try {
+    if (isSignUp) {
+      await auth.createUserWithEmailAndPassword(email, password);
+    } else {
+      await auth.signInWithEmailAndPassword(email, password);
+    }
+  } catch(e) { showLoginError(friendlyError(e.code)); }
+});
+
+// Also allow Enter key on password field
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('emailAuthBtn').click();
+});
+
+// Google sign-in: redirect on mobile (popup blocked), popup on desktop
+document.getElementById('googleSignIn').addEventListener('click', () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  showLoginError('');
+  if (isMobile) {
+    auth.signInWithRedirect(provider).catch(e => showLoginError(friendlyError(e.code)));
+  } else {
+    auth.signInWithPopup(provider).catch(e => showLoginError(friendlyError(e.code)));
+  }
+});
+
+// Handle redirect result when returning from Google on mobile
+auth.getRedirectResult().catch(e => { if(e.code) showLoginError(friendlyError(e.code)); });
+
+document.getElementById('signOutBtn').addEventListener('click', () => auth.signOut());
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    uid = user.uid;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    const av = document.getElementById('userAvatar');
+    if (user.photoURL) { av.src = user.photoURL; av.style.display = 'block'; }
+    else av.style.display = 'none';
     loadAll();
   } else {
-    uid=null;
-    document.getElementById('loginScreen').style.display='flex';
-    document.getElementById('app').style.display='none';
+    uid = null;
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
   }
 });
 
