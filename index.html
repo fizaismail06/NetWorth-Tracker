@@ -13,6 +13,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Firebase auto-config: serves project config from hosting domain only.
+     No API key in code. Only works on net-worth-tracker-64861.web.app -->
+<script src="/__/firebase/init.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 :root{
@@ -519,20 +522,8 @@ input[type=number]{font-family:monospace;}
 </nav>
 
 <script>
-/* ══════════════════════════════════════════════════
-   FIREBASE CONFIG — paste your own values here
-   Firebase console → Project settings → Your apps
-══════════════════════════════════════════════════ */
-const firebaseConfig = {
-  apiKey: "AIzaSyAcDaa6mKlecrX04jLGsYOVlcWgZ1se1Wk",
-  authDomain: "net-worth-tracker-64861.firebaseapp.com",
-  projectId: "net-worth-tracker-64861",
-  storageBucket: "net-worth-tracker-64861.firebasestorage.app",
-  messagingSenderId: "638644971914",
-  appId: "1:638644971914:web:1aaad82b22cfa437290073"
-};
-
-firebase.initializeApp(firebaseConfig);
+/* Firebase is auto-initialized by /__/firebase/init.js above.
+   No API key stored in this file. */
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
